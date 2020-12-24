@@ -1,14 +1,14 @@
 package com.mleibman.common.message.location.alert.kafka;
 
+import com.mleibman.common.model.AggregatedPersonLocationData;
+import com.mleibman.common.model.Location;
 import com.mleibman.common.model.PersonLocationData;
 import com.mleibman.common.model.SuspiciousPersonLocationAlert;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,8 @@ import org.springframework.kafka.config.KafkaStreamsConfiguration;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.kafka.support.serializer.JsonSerde;
 
-import java.util.List;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 
 @Slf4j
@@ -37,18 +38,39 @@ public class LocationAlertKafkaStreamsConf {
 
     @Bean
     public KStream<?, ?> kStream(StreamsBuilder streamBuilder) {
-        //PERSON-LOCATION-DATA
 
-
-        //KStream<Long, Location> locationDataStream = kStreamBuilder.stream("LOCATION-DATA");
         KStream<String, PersonLocationData> personLocationDataStream = streamBuilder.stream("PERSON-LOCATION-DATA",
                 Consumed.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)));
 
-        personLocationDataStream
+        KTable<String, Location> suspiciousLocationTable = streamBuilder.table("SUSPICIOUS-LOCATION-DATA",
+                Consumed.with(Serdes.String(), new JsonSerde<>(Location.class)));
+
+       /* personLocationDataStream
                 .mapValues(personLocationData -> new SuspiciousPersonLocationAlert(personLocationData.getPersonId(), List.of(personLocationData)))
                 .peek((key, message) -> log.info("Sending {}", message))
-                .to("ALERT-PERSON-LOCATION-DATA", Produced.with(Serdes.String(), new JsonSerde<>(SuspiciousPersonLocationAlert.class)));
+                .to("ALERT-PERSON-LOCATION-DATA", Produced.with(Serdes.String(), new JsonSerde<>(SuspiciousPersonLocationAlert.class)));*/
+
+        personLocationDataStream
+                .selectKey((personId, personLocationData) -> personLocationData.getLocation().getLocationId())
+                .join(suspiciousLocationTable, (personLocationData, location) -> personLocationData)
+                .selectKey((personId, personLocationData) -> personLocationData.getPersonId())
+                .groupByKey()
+                .windowedBy(TimeWindows.of(Duration.ofSeconds(60)).grace(Duration.ZERO))
+                .aggregate(this::init, this::agg)
+                .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
+                .toStream()
+                .mapValues((k, m) -> new SuspiciousPersonLocationAlert(m.getPersonLocationDataList().get(0).getPersonId(), m.getPersonLocationDataList()))
+                .peek((key, message) -> log.info("Sending  suspicious alert {}", message))
+                .to("ALERT-PERSON-LOCATION-DATA");
 
         return personLocationDataStream;
+    }
+
+    private AggregatedPersonLocationData init() {
+        return new AggregatedPersonLocationData(Collections.emptyList());
+    }
+
+    private AggregatedPersonLocationData agg(String s, PersonLocationData object, AggregatedPersonLocationData aggregatedPersonLocationData) {
+        return null;
     }
 }

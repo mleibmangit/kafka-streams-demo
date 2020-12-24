@@ -17,11 +17,10 @@ public class Location implements KafkaIncomingData {
     private final double latitude;
 
     @JsonCreator
-    public Location(@JsonProperty("locationId") String locationId,
-                    @JsonProperty("name") String name,
+    public Location(@JsonProperty("name") String name,
                     @JsonProperty("longitude") double longitude,
                     @JsonProperty("latitude") double latitude) {
-        this.locationId = locationId;
+        this.locationId = String.format("%s:%s", longitude, latitude);
         this.name = name;
         this.longitude = longitude;
         this.latitude = latitude;
