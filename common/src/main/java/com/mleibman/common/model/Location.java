@@ -1,20 +1,31 @@
 package com.mleibman.common.model;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 
-@EqualsAndHashCode
 @ToString
+@EqualsAndHashCode
 @Getter
-@AllArgsConstructor
 public class Location implements KafkaIncomingData {
     private final String locationId;
     private final String name;
     private final double longitude;
     private final double latitude;
+
+    @JsonCreator
+    public Location(@JsonProperty("locationId") String locationId,
+                    @JsonProperty("name") String name,
+                    @JsonProperty("longitude") double longitude,
+                    @JsonProperty("latitude") double latitude) {
+        this.locationId = locationId;
+        this.name = name;
+        this.longitude = longitude;
+        this.latitude = latitude;
+    }
 
     // return distance between this location and that location
     // measured in statute miles
