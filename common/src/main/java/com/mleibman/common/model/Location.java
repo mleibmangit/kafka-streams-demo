@@ -2,13 +2,16 @@ package com.mleibman.common.model;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 
 
 @EqualsAndHashCode
 @ToString
+@Getter
 @AllArgsConstructor
-public class Location {
+public class Location implements KafkaIncomingData {
+    private final String locationId;
     private final String name;
     private final double longitude;
     private final double latitude;

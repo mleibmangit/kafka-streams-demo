@@ -7,7 +7,8 @@ import lombok.ToString;
 @ToString
 @Getter
 @AllArgsConstructor
-public class PersonLocationData {
-    private final long personId;
+public class PersonLocationData implements KafkaIncomingData {
+    private final String personId;
     private final Location location;
+    private final long timestamp;
 }
