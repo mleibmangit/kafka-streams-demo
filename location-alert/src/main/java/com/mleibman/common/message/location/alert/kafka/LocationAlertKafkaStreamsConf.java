@@ -29,7 +29,8 @@ public class LocationAlertKafkaStreamsConf {
     public KafkaStreamsConfiguration getKafkaStreamsConfiguration() {
         return new KafkaStreamsConfiguration(Map.of(
                 StreamsConfig.APPLICATION_ID_CONFIG, "location_alerting_app_id_v1",
-                StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092"));
+                StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092",
+                StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, CustomTimeExtractor.class.getName()));
     }
 
     @Bean

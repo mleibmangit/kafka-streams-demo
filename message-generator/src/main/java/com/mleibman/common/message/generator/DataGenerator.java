@@ -23,18 +23,24 @@ public class DataGenerator {
         this.kafkaSender = kafkaSender;
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 5000)
     public void generateLocationData() {
         log.info("The time is now {}", LocalDate.now());
         Location location = generateRandomLocation();
         kafkaSender.send("SUSPICIOUS-LOCATION-DATA", location.getLocationId(), location);
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 3000)
     public void generatePersonLocationData() {
         log.info("The time is now {}", LocalDate.now());
-        PersonLocationData personLocationData = generateRandomPersonLocation();
-        kafkaSender.send("PERSON-LOCATION-DATA", personLocationData.getPersonId(), personLocationData);
+
+        String personId = UUID.randomUUID().toString();
+
+        for (int i = 0; i < 5; i++) {
+            PersonLocationData personLocationData
+                    = new PersonLocationData(personId, generateRandomLocation().getLocationId(), System.currentTimeMillis());
+            kafkaSender.send("PERSON-LOCATION-DATA", personLocationData.getPersonId(), personLocationData);
+        }
     }
 
     public static PersonLocationData generateRandomPersonLocation() {
