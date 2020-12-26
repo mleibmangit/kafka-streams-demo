@@ -11,15 +11,15 @@ import lombok.ToString;
 @Getter
 public class PersonLocationData implements KafkaIncomingData {
     private final String personId;
-    private final Location location;
+    private final String locationId;
     private final long timestamp;
 
     @JsonCreator
     public PersonLocationData(@JsonProperty("personId") String personId,
-                              @JsonProperty("location") Location location,
+                              @JsonProperty("locationId") String locationId,
                               @JsonProperty("timestamp") long timestamp) {
         this.personId = personId;
-        this.location = location;
+        this.locationId = locationId;
         this.timestamp = timestamp;
     }
 }

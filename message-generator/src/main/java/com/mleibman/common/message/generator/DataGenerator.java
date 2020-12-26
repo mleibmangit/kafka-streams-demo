@@ -23,14 +23,14 @@ public class DataGenerator {
         this.kafkaSender = kafkaSender;
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 1000)
     public void generateLocationData() {
         log.info("The time is now {}", LocalDate.now());
         Location location = generateRandomLocation();
         kafkaSender.send("SUSPICIOUS-LOCATION-DATA", location.getLocationId(), location);
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 1000)
     public void generatePersonLocationData() {
         log.info("The time is now {}", LocalDate.now());
         PersonLocationData personLocationData = generateRandomPersonLocation();
@@ -38,7 +38,7 @@ public class DataGenerator {
     }
 
     public static PersonLocationData generateRandomPersonLocation() {
-        return new PersonLocationData(UUID.randomUUID().toString(), generateRandomLocation(), System.currentTimeMillis());
+        return new PersonLocationData(UUID.randomUUID().toString(), generateRandomLocation().getLocationId(), System.currentTimeMillis());
     }
 
     public static Location generateRandomLocation() {
@@ -46,6 +46,6 @@ public class DataGenerator {
     }
 
     private static long getRandomLong() {
-        return new RandomDataGenerator().nextLong(100, 300);
+        return new RandomDataGenerator().nextLong(100, 105);
     }
 }
