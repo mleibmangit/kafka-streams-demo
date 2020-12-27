@@ -14,11 +14,11 @@ import java.util.List;
 @Getter
 public class SuspiciousPersonLocationAlert {
     private final String personId;
-    private final List<PersonLocationData> personLocationDataList;
+    private final List<ExtendedPersonLocationData> personLocationDataList;
 
     @JsonCreator
     public SuspiciousPersonLocationAlert(@JsonProperty("personId") String personId,
-                                         @JsonProperty("personLocationDataList") List<PersonLocationData> personLocationDataList) {
+                                         @JsonProperty("personLocationDataList") List<ExtendedPersonLocationData> personLocationDataList) {
         this.personId = personId;
         this.personLocationDataList = personLocationDataList;
     }

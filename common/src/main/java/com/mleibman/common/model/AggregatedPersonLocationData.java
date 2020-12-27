@@ -12,10 +12,10 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 public class AggregatedPersonLocationData {
-    private final List<PersonLocationData> personLocationDataList;
+    private final List<ExtendedPersonLocationData> extendedPersonLocationDataList;
 
     @JsonCreator
-    public AggregatedPersonLocationData(@JsonProperty("personLocationDataList") List<PersonLocationData> personLocationDataList) {
-        this.personLocationDataList = personLocationDataList;
+    public AggregatedPersonLocationData(@JsonProperty("extendedPersonLocationDataList") List<ExtendedPersonLocationData> extendedPersonLocationDataList) {
+        this.extendedPersonLocationDataList = extendedPersonLocationDataList;
     }
 }

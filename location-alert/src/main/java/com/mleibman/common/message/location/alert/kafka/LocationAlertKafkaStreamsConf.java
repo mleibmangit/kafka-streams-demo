@@ -1,9 +1,6 @@
 package com.mleibman.common.message.location.alert.kafka;
 
-import com.mleibman.common.model.AggregatedPersonLocationData;
-import com.mleibman.common.model.Location;
-import com.mleibman.common.model.PersonLocationData;
-import com.mleibman.common.model.SuspiciousPersonLocationAlert;
+import com.mleibman.common.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -50,22 +47,23 @@ public class LocationAlertKafkaStreamsConf {
         personLocationDataStream
                 .selectKey((personId, personLocationData) -> personLocationData.getLocationId())
                 .peek((key, message) -> log.info("selectKey {}", message))
-                .join(suspiciousLocationTable, (personLocationData, location) -> personLocationData,
+                .join(suspiciousLocationTable, (personLocationData, location)
+                                -> new ExtendedPersonLocationData(personLocationData.getPersonId(), location, personLocationData.getTimestamp()),
                         Joined.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class), new JsonSerde<>(Location.class)))
                 .peek((key, message) -> log.info("join {}", message))
-                .selectKey((personId, personLocationData) -> personLocationData.getPersonId())
+                .selectKey((personId, extendedPersonLocationData) -> extendedPersonLocationData.getPersonId())
                 .peek((key, message) -> log.info("selectKey 2 {}", message))
-                .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)))
+                .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(ExtendedPersonLocationData.class)))
                 .windowedBy(TimeWindows.of(Duration.ofSeconds(60)).grace(Duration.ZERO))
                 .aggregate(this::init, this::agg,
                         Materialized.with(Serdes.String(), new JsonSerde<>(AggregatedPersonLocationData.class)))
                 .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
                 .toStream()
                 .peek((key, message) -> log.info("after suppress {}", message))
-                .filter((key, aggregatedPersonLocationData) -> aggregatedPersonLocationData.getPersonLocationDataList().size() > 1)
+                .filter((key, aggregatedPersonLocationData) -> aggregatedPersonLocationData.getExtendedPersonLocationDataList().size() > 1)
                 .mapValues((key, aggregatedPersonLocationData) ->
-                        new SuspiciousPersonLocationAlert(aggregatedPersonLocationData.getPersonLocationDataList().get(0).getPersonId(),
-                                aggregatedPersonLocationData.getPersonLocationDataList()))
+                        new SuspiciousPersonLocationAlert(aggregatedPersonLocationData.getExtendedPersonLocationDataList().get(0).getPersonId(),
+                                aggregatedPersonLocationData.getExtendedPersonLocationDataList()))
                 .peek((key, message) -> log.info("Sending  suspicious person alert {}", message))
                 .to("ALERT-PERSON-LOCATION-DATA",
                         Produced.with(WindowedSerdes.timeWindowedSerdeFrom(String.class), new JsonSerde<>(SuspiciousPersonLocationAlert.class)));
@@ -76,9 +74,10 @@ public class LocationAlertKafkaStreamsConf {
         return new AggregatedPersonLocationData(Collections.emptyList());
     }
 
-    private AggregatedPersonLocationData agg(String key, PersonLocationData personLocationData, AggregatedPersonLocationData aggregatedPersonLocationData) {
-        ArrayList<PersonLocationData> aggregatedPersonLocationDataList = new ArrayList<>(aggregatedPersonLocationData.getPersonLocationDataList());
-        aggregatedPersonLocationDataList.add(personLocationData);
+    private AggregatedPersonLocationData agg(String key, ExtendedPersonLocationData extendedPersonLocationData,
+                                             AggregatedPersonLocationData aggregatedPersonLocationData) {
+        ArrayList<ExtendedPersonLocationData> aggregatedPersonLocationDataList = new ArrayList<>(aggregatedPersonLocationData.getExtendedPersonLocationDataList());
+        aggregatedPersonLocationDataList.add(extendedPersonLocationData);
         return new AggregatedPersonLocationData(aggregatedPersonLocationDataList);
     }
 }
