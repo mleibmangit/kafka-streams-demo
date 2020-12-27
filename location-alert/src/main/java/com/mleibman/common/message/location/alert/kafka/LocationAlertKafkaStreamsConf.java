@@ -47,22 +47,14 @@ public class LocationAlertKafkaStreamsConf {
         KTable<String, Location> suspiciousLocationTable = streamBuilder.table("SUSPICIOUS-LOCATION-DATA",
                 Consumed.with(Serdes.String(), new JsonSerde<>(Location.class)));
 
-       /* personLocationDataStream
-                .mapValues(personLocationData -> new SuspiciousPersonLocationAlert(personLocationData.getPersonId(), List.of(personLocationData)))
-                .peek((key, message) -> log.info("Sending {}", message))
-                .to("ALERT-PERSON-LOCATION-DATA", Produced.with(Serdes.String(), new JsonSerde<>(SuspiciousPersonLocationAlert.class)));*/
-
         personLocationDataStream
                 .selectKey((personId, personLocationData) -> personLocationData.getLocationId())
                 .peek((key, message) -> log.info("selectKey {}", message))
-                //.to("ALERT-PERSON-LOCATION-DATA", Produced.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)));
                 .join(suspiciousLocationTable, (personLocationData, location) -> personLocationData,
                         Joined.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class), new JsonSerde<>(Location.class)))
                 .peek((key, message) -> log.info("join {}", message))
-                //.to("ALERT-PERSON-LOCATION-DATA", Produced.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)));
                 .selectKey((personId, personLocationData) -> personLocationData.getPersonId())
                 .peek((key, message) -> log.info("selectKey 2 {}", message))
-                //.to("ALERT-PERSON-LOCATION-DATA", Produced.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)));
                 .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)))
                 .windowedBy(TimeWindows.of(Duration.ofSeconds(60)).grace(Duration.ZERO))
                 .aggregate(this::init, this::agg,
@@ -70,8 +62,11 @@ public class LocationAlertKafkaStreamsConf {
                 .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
                 .toStream()
                 .peek((key, message) -> log.info("after suppress {}", message))
-                .mapValues((k, m) -> new SuspiciousPersonLocationAlert(m.getPersonLocationDataList().get(0).getPersonId(), m.getPersonLocationDataList()))
-                .peek((key, message) -> log.info("Sending  suspicious alert {}", message))
+                .filter((key, aggregatedPersonLocationData) -> aggregatedPersonLocationData.getPersonLocationDataList().size() > 1)
+                .mapValues((key, aggregatedPersonLocationData) ->
+                        new SuspiciousPersonLocationAlert(aggregatedPersonLocationData.getPersonLocationDataList().get(0).getPersonId(),
+                                aggregatedPersonLocationData.getPersonLocationDataList()))
+                .peek((key, message) -> log.info("Sending  suspicious person alert {}", message))
                 .to("ALERT-PERSON-LOCATION-DATA",
                         Produced.with(WindowedSerdes.timeWindowedSerdeFrom(String.class), new JsonSerde<>(SuspiciousPersonLocationAlert.class)));
         return personLocationDataStream;
