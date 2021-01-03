@@ -24,7 +24,7 @@ public class LocationAlertKafkaStreamBuilder {
         this.streamBuilder = streamBuilder;
     }
 
-    public KStream<String, PersonLocationData> buildLocationAlertKafkaStream() {
+    public KStream<String, PersonLocationData> buildLocationAlertKafkaStream(LocationAlertKafkaStreamProperties locationAlertKafkaStreamProperties) {
 
         KStream<String, PersonLocationData> personLocationDataStream = streamBuilder.stream("PERSON-LOCATION-DATA",
                 Consumed.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)));
@@ -42,13 +42,14 @@ public class LocationAlertKafkaStreamBuilder {
                 .selectKey((personId, extendedPersonLocationData) -> extendedPersonLocationData.getPersonId())
                 .peek((key, message) -> log.info("selectKey 2 {}", message))
                 .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(ExtendedPersonLocationData.class)))
-                .windowedBy(TimeWindows.of(Duration.ofSeconds(60)).grace(Duration.ZERO))
+                .windowedBy(TimeWindows.of(Duration.ofSeconds(locationAlertKafkaStreamProperties.getWindowSizeSeconds())).grace(Duration.ZERO))
                 .aggregate(this::init, this::agg,
                         Materialized.with(Serdes.String(), new JsonSerde<>(AggregatedPersonLocationData.class)))
                 .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
                 .toStream()
                 .peek((key, message) -> log.info("after suppress {}", message))
-                .filter((key, aggregatedPersonLocationData) -> aggregatedPersonLocationData.getExtendedPersonLocationDataList().size() > 1)
+                .filter((key, aggregatedPersonLocationData)
+                        -> aggregatedPersonLocationData.getExtendedPersonLocationDataList().size() > locationAlertKafkaStreamProperties.getMinimumSizeOfSuspiciousVisits())
                 .mapValues((key, aggregatedPersonLocationData) ->
                         new SuspiciousPersonLocationAlert(aggregatedPersonLocationData.getExtendedPersonLocationDataList().get(0).getPersonId(),
                                 aggregatedPersonLocationData.getExtendedPersonLocationDataList()))
