@@ -49,6 +49,6 @@ public class LocationAlertKafkaStreamsConf {
     @Bean
     public KStream<?, ?> kStream(LocationAlertKafkaStreamBuilder locationAlertKafkaStreamBuilder) {
         return locationAlertKafkaStreamBuilder
-                .buildLocationAlertKafkaStream(new LocationAlertKafkaStreamProperties(60, 2));
+                .buildLocationAlertKafkaStream_GlobalKTable(new LocationAlertKafkaStreamProperties(60, 2));
     }
 }

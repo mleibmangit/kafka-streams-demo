@@ -24,6 +24,43 @@ public class LocationAlertKafkaStreamBuilder {
         this.streamBuilder = streamBuilder;
     }
 
+    public KStream<String, PersonLocationData> buildLocationAlertKafkaStream_GlobalKTable(LocationAlertKafkaStreamProperties locationAlertKafkaStreamProperties) {
+
+        KStream<String, PersonLocationData> personLocationDataStream = streamBuilder.stream("PERSON-LOCATION-DATA",
+                Consumed.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class)));
+
+        GlobalKTable<String, Location> suspiciousLocationTable = streamBuilder.globalTable("SUSPICIOUS-LOCATION-DATA",
+                Consumed.with(Serdes.String(), new JsonSerde<>(Location.class)));
+
+        personLocationDataStream
+                /*.selectKey((personId, personLocationData) -> personLocationData.getLocationId())
+                .peek((key, message) -> log.info("selectKey {}", message))*/
+                .join(suspiciousLocationTable,
+                        (personId, personLocationData) -> personLocationData.getLocationId(),
+                        (personLocationData, location)
+                                -> new ExtendedPersonLocationData(personLocationData.getPersonId(), location, personLocationData.getTimestamp()))
+                .peek((key, message) -> log.info("join {}", message))
+                .selectKey((personId, extendedPersonLocationData) -> extendedPersonLocationData.getPersonId())
+                .peek((key, message) -> log.info("selectKey 2 {}", message))
+                .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(ExtendedPersonLocationData.class)))
+                .windowedBy(TimeWindows.of(Duration.ofSeconds(locationAlertKafkaStreamProperties.getWindowSizeSeconds())).grace(Duration.ZERO))
+                .aggregate(this::init, this::agg,
+                        Materialized.with(Serdes.String(), new JsonSerde<>(AggregatedPersonLocationData.class)))
+                .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
+                .toStream()
+                .peek((key, message) -> log.info("after suppress {}", message))
+                .filter((key, aggregatedPersonLocationData)
+                        -> aggregatedPersonLocationData.getExtendedPersonLocationDataList().size() > locationAlertKafkaStreamProperties.getMinimumSizeOfSuspiciousVisits())
+                .mapValues((key, aggregatedPersonLocationData) ->
+                        new SuspiciousPersonLocationAlert(aggregatedPersonLocationData.getExtendedPersonLocationDataList().get(0).getPersonId(),
+                                aggregatedPersonLocationData.getExtendedPersonLocationDataList()))
+                .peek((key, message) -> log.info("Sending  suspicious person alert {}", message))
+                .to("ALERT-PERSON-LOCATION-DATA",
+                        Produced.with(WindowedSerdes.timeWindowedSerdeFrom(String.class), new JsonSerde<>(SuspiciousPersonLocationAlert.class)));
+        return personLocationDataStream;
+    }
+
+
     public KStream<String, PersonLocationData> buildLocationAlertKafkaStream(LocationAlertKafkaStreamProperties locationAlertKafkaStreamProperties) {
 
         KStream<String, PersonLocationData> personLocationDataStream = streamBuilder.stream("PERSON-LOCATION-DATA",
@@ -33,14 +70,14 @@ public class LocationAlertKafkaStreamBuilder {
                 Consumed.with(Serdes.String(), new JsonSerde<>(Location.class)));
 
         personLocationDataStream
-                .selectKey((personId, personLocationData) -> personLocationData.getLocationId())
-                .peek((key, message) -> log.info("selectKey {}", message))
+                /* .selectKey((personId, personLocationData) -> personLocationData.getLocationId())
+                 .peek((key, message) -> log.info("selectKey {}", message))*/
                 .join(suspiciousLocationTable, (personLocationData, location)
                                 -> new ExtendedPersonLocationData(personLocationData.getPersonId(), location, personLocationData.getTimestamp()),
                         Joined.with(Serdes.String(), new JsonSerde<>(PersonLocationData.class), new JsonSerde<>(Location.class)))
                 .peek((key, message) -> log.info("join {}", message))
-                .selectKey((personId, extendedPersonLocationData) -> extendedPersonLocationData.getPersonId())
-                .peek((key, message) -> log.info("selectKey 2 {}", message))
+                /* .selectKey((personId, extendedPersonLocationData) -> extendedPersonLocationData.getPersonId())
+                 .peek((key, message) -> log.info("selectKey 2 {}", message))*/
                 .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(ExtendedPersonLocationData.class)))
                 .windowedBy(TimeWindows.of(Duration.ofSeconds(locationAlertKafkaStreamProperties.getWindowSizeSeconds())).grace(Duration.ZERO))
                 .aggregate(this::init, this::agg,
