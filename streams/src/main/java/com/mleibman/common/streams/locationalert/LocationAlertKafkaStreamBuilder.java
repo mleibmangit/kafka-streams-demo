@@ -1,4 +1,4 @@
-package com.mleibman.common.message.location.alert.kafka.location;
+package com.mleibman.common.streams.locationalert;
 
 import com.mleibman.common.model.location.*;
 import lombok.extern.slf4j.Slf4j;

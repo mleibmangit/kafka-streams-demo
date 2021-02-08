@@ -1,4 +1,4 @@
-package com.mleibman.common.message.location.alert.kafka.order;
+package com.mleibman.common.streams.order;
 
 import com.mleibman.common.model.order.Order;
 import com.mleibman.common.model.order.OrderRewards;

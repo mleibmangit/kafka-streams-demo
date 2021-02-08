@@ -1,7 +1,8 @@
-package com.mleibman.common.message.location.alert.kafka;
+package com.mleibman.common.streams.kafka;
 
-import com.mleibman.common.message.location.alert.kafka.location.LocationAlertKafkaStreamBuilder;
-import com.mleibman.common.message.location.alert.kafka.location.LocationAlertKafkaStreamProperties;
+import com.mleibman.common.streams.CustomTimeExtractor;
+import com.mleibman.common.streams.locationalert.LocationAlertKafkaStreamBuilder;
+import com.mleibman.common.streams.locationalert.LocationAlertKafkaStreamProperties;
 import com.mleibman.common.model.location.Location;
 import com.mleibman.common.model.location.PersonLocationData;
 import com.mleibman.common.model.location.SuspiciousPersonLocationAlert;

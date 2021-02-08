@@ -15,7 +15,7 @@
     <modules>
         <module>common</module>
         <module>message-generator</module>
-        <module>location-alert</module>
+        <module>streams</module>
     </modules>
 
     <properties>

@@ -1,4 +1,4 @@
-package com.mleibman.common.message.location.alert.kafka.location;
+package com.mleibman.common.streams.locationalert;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

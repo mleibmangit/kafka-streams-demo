@@ -1,4 +1,4 @@
-package com.mleibman.common.message.location.alert.kafka;
+package com.mleibman.common.streams;
 
 import com.mleibman.common.model.location.ExtendedPersonLocationData;
 import com.mleibman.common.model.location.PersonLocationData;

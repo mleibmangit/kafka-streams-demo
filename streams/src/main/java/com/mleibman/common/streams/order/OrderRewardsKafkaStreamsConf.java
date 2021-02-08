@@ -1,6 +1,6 @@
-package com.mleibman.common.message.location.alert.kafka.order;
+package com.mleibman.common.streams.order;
 
-import com.mleibman.common.message.location.alert.kafka.CustomTimeExtractor;
+import com.mleibman.common.streams.CustomTimeExtractor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
