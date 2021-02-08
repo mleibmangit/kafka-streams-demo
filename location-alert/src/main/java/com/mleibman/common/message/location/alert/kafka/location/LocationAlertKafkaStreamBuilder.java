@@ -1,20 +1,19 @@
-package com.mleibman.common.message.location.alert.kafka;
+package com.mleibman.common.message.location.alert.kafka.location;
 
-import com.mleibman.common.model.*;
+import com.mleibman.common.model.location.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.serializer.JsonSerde;
-import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 
 @Slf4j
-@Service
+//@Service
 public class LocationAlertKafkaStreamBuilder {
 
     private final StreamsBuilder streamBuilder;

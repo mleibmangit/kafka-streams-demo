@@ -1,7 +1,8 @@
-package com.mleibman.common.model;
+package com.mleibman.common.model.location;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mleibman.common.model.KafkaIncomingData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

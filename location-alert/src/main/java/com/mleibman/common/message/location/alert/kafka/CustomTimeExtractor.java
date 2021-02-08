@@ -1,7 +1,7 @@
 package com.mleibman.common.message.location.alert.kafka;
 
-import com.mleibman.common.model.ExtendedPersonLocationData;
-import com.mleibman.common.model.PersonLocationData;
+import com.mleibman.common.model.location.ExtendedPersonLocationData;
+import com.mleibman.common.model.location.PersonLocationData;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.streams.processor.TimestampExtractor;
 

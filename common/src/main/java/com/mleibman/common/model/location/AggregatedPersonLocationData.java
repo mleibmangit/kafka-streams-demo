@@ -1,4 +1,4 @@
-package com.mleibman.common.model;
+package com.mleibman.common.model.location;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

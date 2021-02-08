@@ -1,5 +1,6 @@
-package com.mleibman.common.message.location.alert.kafka;
+package com.mleibman.common.message.location.alert.kafka.location;
 
+import com.mleibman.common.message.location.alert.kafka.CustomTimeExtractor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
@@ -7,7 +8,6 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
 import org.springframework.kafka.config.KafkaStreamsInfrastructureCustomizer;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
@@ -15,7 +15,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import java.util.Map;
 
 @Slf4j
-@Configuration
+//@Configuration
 public class LocationAlertKafkaStreamsConf {
 
     @Bean

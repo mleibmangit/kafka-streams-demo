@@ -1,8 +1,10 @@
 package com.mleibman.common.message.location.alert.kafka;
 
-import com.mleibman.common.model.Location;
-import com.mleibman.common.model.PersonLocationData;
-import com.mleibman.common.model.SuspiciousPersonLocationAlert;
+import com.mleibman.common.message.location.alert.kafka.location.LocationAlertKafkaStreamBuilder;
+import com.mleibman.common.message.location.alert.kafka.location.LocationAlertKafkaStreamProperties;
+import com.mleibman.common.model.location.Location;
+import com.mleibman.common.model.location.PersonLocationData;
+import com.mleibman.common.model.location.SuspiciousPersonLocationAlert;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.Windowed;
